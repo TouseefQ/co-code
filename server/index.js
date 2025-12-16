@@ -4,18 +4,27 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 
 const app = express();
+
+// Enable CORS for all routes (middleware)
 app.use(cors());
 
+// Create the HTTP server
 const server = http.createServer(app);
 
+// Initialize Socket.io with CORS rules
 const io = new Server(server, {
   cors: {
-    // Allow ANY domain to connect (easiest for development/demo)
-    origin: "*", 
+    origin: "*", // Allow connection from any URL (Vercel, localhost, etc.)
     methods: ["GET", "POST"],
   },
 });
 
+// --- NEW: Home Route (Fixes "Cannot GET /") ---
+app.get("/", (req, res) => {
+  res.send("<h1>Server is running successfully! 🚀</h1>");
+});
+
+// --- Socket.io Logic ---
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
@@ -26,17 +35,20 @@ io.on("connection", (socket) => {
   });
 
   // 2. Handle Code Changes
+  // When User A types, send the code to everyone ELSE in the room
   socket.on("code_change", ({ roomId, code }) => {
     socket.to(roomId).emit("receive_code", code);
   });
 
+  // 3. Disconnect
   socket.on("disconnect", () => {
     console.log("User Disconnected", socket.id);
   });
 });
 
-// Use the PORT environment variable provided by Render
+// --- Start Server ---
+// IMPORTANT: Render provides the PORT via process.env.PORT
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`SERVER RUNNING on ${PORT}`);
+  console.log(`SERVER RUNNING on port ${PORT}`);
 });
