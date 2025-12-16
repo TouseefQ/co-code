@@ -4,7 +4,12 @@ import io from "socket.io-client";
 import "./App.css";
 
 // Connect to Backend
-const socket = io.connect("http://localhost:3001");
+// Detect if we are running locally or in production
+const SERVER_URL = process.env.NODE_ENV === 'production' 
+  ? "https://YOUR-RENDER-APP-NAME.onrender.com" // <--- PASTE YOUR RENDER URL HERE
+  : "http://localhost:3001";
+
+const socket = io.connect(SERVER_URL);
 
 function App() {
   const [roomId, setRoomId] = useState("room1"); // Default room
